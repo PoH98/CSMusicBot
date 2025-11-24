@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Addons.CommandsExtension" Version="1.0.4" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.18.0" />
+    <PackageReference Include="Lavalink4NET.Discord.NET" Version="4.1.0" />
+    <PackageReference Include="Lavalink4NET.InactivityTracking" Version="4.1.0" />
+    <PackageReference Include="Lavalink4NET.Integrations.SponsorBlock" Version="4.1.0" />
+  </ItemGroup>
+
+</Project>
