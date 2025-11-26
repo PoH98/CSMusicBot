@@ -24,7 +24,7 @@ namespace CSMusicBot.Commands.Music
         { 
             this.audioService = audioService;
             this.trackQueues = tracks;
-            this.segments = [SegmentCategory.Intro, SegmentCategory.Sponsor, SegmentCategory.SelfPromotion, SegmentCategory.OfftopicMusic, SegmentCategory.Outro];
+            this.segments = [SegmentCategory.Intro, SegmentCategory.Sponsor, SegmentCategory.SelfPromotion, SegmentCategory.OfftopicMusic, SegmentCategory.Outro, SegmentCategory.Preview];
             this.options = options;
         }
 
@@ -53,7 +53,7 @@ namespace CSMusicBot.Commands.Music
             {
                 InitialTrack = new TrackQueueItem(url),
             };
-
+            var msg = await Context.Message.ReplyAsync($"{cmd.LoadingEmoji} Loading... `[{url}]`");
             var player = await GetPlayerAsync().ConfigureAwait(false);
             if (player == null)
             {
@@ -63,15 +63,19 @@ namespace CSMusicBot.Commands.Music
             {
                 url = url.Replace("https://www.youtube.com/shorts/", "https://www.youtube.com/watch?v=");
             }
-            var msg = await Context.Message.ReplyAsync($"{cmd.LoadingEmoji} Loading... `[{url}]`");
             var track = await audioService.Tracks.LoadTrackAsync(url, new TrackLoadOptions
             {
+                CacheMode = Lavalink4NET.Rest.Entities.CacheMode.Dynamic,
+                SearchBehavior = StrictSearchBehavior.Resolve,
                 SearchMode = TrackSearchMode.YouTube
             }).ConfigureAwait(false);
 
             if (track is null)
             {
-                await Context.Message.ReplyAsync($"{cmd.WarningEmoji} No results found for `{url}`.").ConfigureAwait(false);
+                await msg.ModifyAsync((p) =>
+                {
+                    p.Content = $"{cmd.WarningEmoji} No results found for `{url}`.";
+                }).ConfigureAwait(false);
                 return;
             }
 

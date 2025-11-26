@@ -1,0 +1,89 @@
+server:
+  port: 2333
+  address: 127.0.0.1 # Set it to 0.0.0.0 if you run it in docker or if you want to share it
+  http2:
+    enabled: false # Personally we don't see any reason currently to enable it
+plugins:
+  youtube: # To read more about it's configuration visit https://github.com/lavalink-devs/youtube-source#plugin
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients: # We suggest using it like this, since it switches through the clients to get streams and search running
+      - M_WEB
+      - WEB
+      - MUSIC
+      - WEBEMBEDDED
+      - ANDROID_VR
+      - TV
+      - TVHTML5EMBEDDED
+    oauth: # Read https://github.com/lavalink-devs/youtube-source?tab=readme-ov-file#using-oauth-tokens for more information
+      enabled: true
+      skipInitialization: false
+lavalink:
+  plugins: # You can find more plugins on Lavalinks official site at https://lavalink.dev/plugins
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.16.0" # Source: https://github.com/lavalink-devs/youtube-source
+      snapshot: false
+  server:
+    password: "youshallnotpass" # Set your lavalink password
+    sources:
+      youtube: false # Disabled youtube because it's not maintained anymore and got replaced by youtube-plugin
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: true
+      nico: true
+    filters:
+      volume: true
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
+    bufferDurationMs: 10000
+    frameBufferDurationMs: 10000
+    opusEncodingQuality: 10
+    resamplingQuality: MEDIUM
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    youtubePlaylistLoadLimit: 6
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    gc-warnings: true
+
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+sentry:
+  dsn: ""
+  environment: "dev"
+logging:
+  file:
+    path: ./logs/
+
+  level:
+    root: INFO
+    lavalink: INFO
+    dev.lavalink.youtube.http.YoutubeOauth2Handler: INFO
+
+  request:
+    enabled: true
+    includeClientInfo: true
+    includeHeaders: false
+    includeQueryString: true
+    includePayload: true
+    maxPayloadLength: 10000
+
+
+  logback:
+    rollingpolicy:
+      max-file-size: 1GB
+      max-history: 30

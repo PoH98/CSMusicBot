@@ -2,7 +2,10 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Lavalink4NET;
+using Lavalink4NET.Events.Players;
+using Lavalink4NET.Protocol.Payloads.Events;
 using Microsoft.Extensions.Options;
+using System;
 using System.Reflection;
 
 namespace CSMusicBot.Commands
@@ -30,7 +33,7 @@ namespace CSMusicBot.Commands
         public async Task InstallCommandsAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
-            _client.UnknownDispatchReceived += UnknownDispatchReceived;
+            _client.UserVoiceStateUpdated += UserVoiceStateUpdated;
 
             _audioService.TrackEnded += _audioService_TrackEnded;
 
@@ -38,21 +41,30 @@ namespace CSMusicBot.Commands
                                             services: _serviceProvider);
         }
 
-        private async Task _audioService_TrackEnded(object sender, Lavalink4NET.Events.Players.TrackEndedEventArgs eventArgs)
+        private async Task UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
         {
-            if (!eventArgs.MayStartNext)
+            if(arg3.VoiceChannel == null && arg2.VoiceChannel != null)
+            {
+                await Task.Delay(5000);
+                var channel = await _client.GetChannelAsync(arg2.VoiceChannel.Id);
+                var vc = (SocketVoiceChannel)channel;
+                if (vc.ConnectedUsers.Count == 0)
+                {
+                    //leave vc
+                    await vc.DisconnectAsync();
+                }
+            }
+        }
+
+        private async Task _audioService_TrackEnded(object sender, TrackEndedEventArgs eventArgs)
+        {
+            if (eventArgs.Reason == TrackEndReason.Finished)
             {
                 //leave vc
                 var channel = await _client.GetChannelAsync(eventArgs.Player.VoiceChannelId);
                 var vc = (SocketVoiceChannel)channel;
                 await vc.DisconnectAsync();
             }
-        }
-
-        private Task UnknownDispatchReceived(string arg1, Newtonsoft.Json.Linq.JToken arg2)
-        {
-            Console.WriteLine("Unknown received");
-            return Task.CompletedTask;
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)

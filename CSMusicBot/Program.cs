@@ -18,8 +18,19 @@ namespace CSMusicBot
         {
             var builder = new HostApplicationBuilder();
             var token = builder.Configuration.GetValue<string>("Token");
-            var logSeverity = builder.Configuration.GetValue<string>("Logging.LogLevel.Default");
+            var logSeverity = builder.Configuration.GetSection("Logging").GetSection("LogLevel").GetValue<string>("Default");
+            var baseAddress = builder.Configuration.GetSection("Lavalink").GetValue<string>("Lavalink");
+            if (string.IsNullOrEmpty(baseAddress))
+            {
+                baseAddress = "https://lavalink.jirayu.net";
+            }
+            var password = builder.Configuration.GetSection("Lavalink").GetValue<string>("Lavapass");
+            if (string.IsNullOrEmpty(password))
+            {
+                password = "youshallnotpass";
+            }
 
+            builder.Services.AddMemoryCache();
             builder.Services.Configure<Command>(builder.Configuration.GetSection("Command"));
             builder.Services.Configure<IdleInactivityTrackerOptions>(config =>
             {
@@ -28,8 +39,8 @@ namespace CSMusicBot
             });
             builder.Services.ConfigureLavalink(config =>
             {
-                config.BaseAddress = new Uri(builder.Configuration.GetValue<string>("Lavalink.Lavalink") ?? "https://lavalink.jirayu.net");
-                config.Passphrase = builder.Configuration.GetValue<string>("Lavalink.Lavapass") ?? "youshallnotpass";
+                config.BaseAddress = new Uri(baseAddress);
+                config.Passphrase = password;
             });
             if (!Enum.TryParse(logSeverity, out LogSeverity result))
             {
@@ -54,6 +65,7 @@ namespace CSMusicBot
             var app = builder.Build();
             app.UseSponsorBlock();
             logger = app.Services.GetRequiredService<ILogger<DiscordSocketClient>>();
+            logger.LogInformation("Using Lavalink server " + baseAddress);
             await app.RunAsync();
         }
 
