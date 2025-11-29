@@ -99,7 +99,7 @@ namespace CSMusicBot.Commands.Music
                     {
                         p.Content = successString + " to begin playing.";
                     }).ConfigureAwait(false);
-                    await msg.ReplyAsync($"{successString} Loaded {playList.Count} additional tracks!").ConfigureAwait(false);
+                    await msg.ReplyAsync($"{cmd.SuccessEmoji} Loaded `{playList.Count}` additional tracks!").ConfigureAwait(false);
                 }
                 else
                 {
@@ -107,7 +107,7 @@ namespace CSMusicBot.Commands.Music
                     {
                         p.Content = successString + " to the queue at position " + position + ".";
                     }).ConfigureAwait(false);
-                    await msg.ReplyAsync($"{successString} Loaded {playList.Count} additional tracks!").ConfigureAwait(false);
+                    await msg.ReplyAsync($"{cmd.SuccessEmoji} Loaded `{playList.Count}` additional tracks!").ConfigureAwait(false);
                 }
             }
             else
