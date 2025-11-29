@@ -58,7 +58,7 @@ namespace CSMusicBot.Commands
 
         private async Task _audioService_TrackEnded(object sender, TrackEndedEventArgs eventArgs)
         {
-            if (eventArgs.Reason == TrackEndReason.Finished)
+            if (eventArgs.Reason == TrackEndReason.Finished && !eventArgs.MayStartNext)
             {
                 //leave vc
                 var channel = await _client.GetChannelAsync(eventArgs.Player.VoiceChannelId);

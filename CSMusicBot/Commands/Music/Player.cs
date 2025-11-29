@@ -63,38 +63,89 @@ namespace CSMusicBot.Commands.Music
             {
                 url = url.Replace("https://www.youtube.com/shorts/", "https://www.youtube.com/watch?v=");
             }
-            var track = await audioService.Tracks.LoadTrackAsync(url, new TrackLoadOptions
-            {
-                CacheMode = Lavalink4NET.Rest.Entities.CacheMode.Dynamic,
-                SearchBehavior = StrictSearchBehavior.Resolve,
-                SearchMode = TrackSearchMode.YouTube
-            }).ConfigureAwait(false);
 
-            if (track is null)
+            if (url.Contains("list="))
             {
-                await msg.ModifyAsync((p) =>
+                var playList = await audioService.Tracks.LoadTracksAsync(url, new TrackLoadOptions
                 {
-                    p.Content = $"{cmd.WarningEmoji} No results found for `{url}`.";
-                }).ConfigureAwait(false);
-                return;
-            }
+                    CacheMode = Lavalink4NET.Rest.Entities.CacheMode.Dynamic,
+                    SearchBehavior = StrictSearchBehavior.Resolve,
+                    SearchMode = TrackSearchMode.YouTube
+                });
 
-            var position = await player.PlayAsync(track).ConfigureAwait(false);
-            var successString = $"{cmd.SuccessEmoji} Added **{track.Title}** (`{track.Duration}`)";
-            if (position is 0)
-            {
-                await msg.ModifyAsync((p) =>
+                if (playList.Track == null)
                 {
-                    p.Content = successString + " to begin playing.";
-                }).ConfigureAwait(false);
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = $"{cmd.WarningEmoji} No results found for `{url}`.";
+                    }).ConfigureAwait(false);
+                    return;
+                }
+
+                var position = -1;
+                foreach(var track in playList.Tracks)
+                {
+                    var pos = await player.PlayAsync(track).ConfigureAwait(false);
+                    if(position == -1)
+                    {
+                        position = pos;
+                    }
+                }
+
+                var successString = $"{cmd.SuccessEmoji} Added **{playList.Track.Title}** (`{playList.Track.Duration}`)";
+                if (position is 0)
+                {
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = successString + " to begin playing.";
+                    }).ConfigureAwait(false);
+                    await msg.ReplyAsync($"{successString} Loaded {playList.Count} additional tracks!").ConfigureAwait(false);
+                }
+                else
+                {
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = successString + " to the queue at position " + position + ".";
+                    }).ConfigureAwait(false);
+                    await msg.ReplyAsync($"{successString} Loaded {playList.Count} additional tracks!").ConfigureAwait(false);
+                }
             }
             else
             {
-                await msg.ModifyAsync((p) =>
+                var track = await audioService.Tracks.LoadTrackAsync(url, new TrackLoadOptions
                 {
-                    p.Content = successString + " to the queue at position " + position + ".";
+                    CacheMode = Lavalink4NET.Rest.Entities.CacheMode.Dynamic,
+                    SearchBehavior = StrictSearchBehavior.Resolve,
+                    SearchMode = TrackSearchMode.YouTube
                 }).ConfigureAwait(false);
+
+                if (track is null)
+                {
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = $"{cmd.WarningEmoji} No results found for `{url}`.";
+                    }).ConfigureAwait(false);
+                    return;
+                }
+
+                var position = await player.PlayAsync(track).ConfigureAwait(false);
+                var successString = $"{cmd.SuccessEmoji} Added **{track.Title}** (`{track.Duration}`)";
+                if (position is 0)
+                {
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = successString + " to begin playing.";
+                    }).ConfigureAwait(false);
+                }
+                else
+                {
+                    await msg.ModifyAsync((p) =>
+                    {
+                        p.Content = successString + " to the queue at position " + position + ".";
+                    }).ConfigureAwait(false);
+                }
             }
+
         }
 
         [Command("p", RunMode = RunMode.Async)]
@@ -270,6 +321,8 @@ namespace CSMusicBot.Commands.Music
             await Repeat(args);
         }
 
+        [Command("loop", RunMode = RunMode.Async)]
+        [Summary("re-adds music to the queue when finished. Can use with \"loop\" [off|all|single]")]
         public async Task Loop()
         {
             await Repeat(string.Empty);
